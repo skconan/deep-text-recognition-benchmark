@@ -6,7 +6,7 @@ After completing the model training, use ```transform_to_onnx.py``` to convert t
 
 You can use OpenCV C++ samples ```text_recog.cpp``` or ```text_recog.py``` to check if the model run in the right way. More usable examples can be found https://github.com/opencv/opencv/blob/master/samples/dnn/text_detection.cpp.
 
-
+_____________________________________________________________________________________________________
 ### Below is the original document
 # What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis
 | [paper](https://arxiv.org/abs/1904.01906) | [training and evaluation data](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here) | [failure cases and cleansed label](https://github.com/clovaai/deep-text-recognition-benchmark#download-failure-cases-and-cleansed-label-from-here) | [pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW) | [Baidu ver(passwd:rryk)](https://pan.baidu.com/s/1KSNLv4EY3zFWHpBYlpFCBQ) |
