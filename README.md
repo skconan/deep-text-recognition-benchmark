@@ -6,6 +6,7 @@ After completing the model training, use ```transform_to_onnx.py``` to convert t
 
 You can use OpenCV C++ samples ```text_recog.cpp``` or ```text_recog.py``` to check if the model run in the right way. More usable examples can be found https://github.com/opencv/opencv/blob/master/samples/dnn/text_detection.cpp.
 
+
 _____________________________________________________________________________________________________
 ### Below is the original document
 # What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis
