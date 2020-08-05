@@ -15,7 +15,6 @@ class BidirectionalLSTM(nn.Module):
         """
         # self.rnn.flatten_parameters()
         recurrent, _ = self.rnn(input)  # batch_size x T x input_size -> batch_size x T x (2*hidden_size)
-        print("rnn size", recurrent.size())
         b, T, h = recurrent.size()
         recurrent = recurrent.view(b*T, h)
         output = self.linear(recurrent)  # batch_size x T x output_size
