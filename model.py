@@ -17,7 +17,7 @@ limitations under the License.
 import torch.nn as nn
 
 from modules.transformation import TPS_SpatialTransformerNetwork
-from modules.feature_extraction import VGG_FeatureExtractor, RCNN_FeatureExtractor, ResNet_FeatureExtractor
+from modules.feature_extraction import VGG_FeatureExtractor, RCNN_FeatureExtractor, ResNet_FeatureExtractor, DenseNet
 from modules.sequence_modeling import BidirectionalLSTM
 from modules.prediction import Attention
 
@@ -44,10 +44,16 @@ class Model(nn.Module):
             self.FeatureExtraction = RCNN_FeatureExtractor(opt.input_channel, opt.output_channel)
         elif opt.FeatureExtraction == 'ResNet':
             self.FeatureExtraction = ResNet_FeatureExtractor(opt.input_channel, opt.output_channel)
+        elif opt.FeatureExtraction == 'DenseNet':
+            self.FeatureExtraction = DenseNet(opt.input_channel, opt.output_channel)
         else:
             raise Exception('No FeatureExtraction module specified')
-        self.FeatureExtraction_output = opt.output_channel  # int(imgH/16-1) * 512
-        self.AdaptiveAvgPool = nn.AdaptiveAvgPool2d((None, 1))  # Transform final (imgH/16-1) -> 1
+        
+        if opt.FeatureExtraction == 'DenseNet':
+            self.FeatureExtraction_output = 768 # DenseNet output channel is 768
+        else:
+            self.FeatureExtraction_output = opt.output_channel  # int(imgH/16-1) * 512
+        # self.AdaptiveAvgPool = nn.AdaptiveAvgPool2d((None, 1))  # Transform final (imgH/16-1) -> 1
 
         """ Sequence modeling"""
         if opt.SequenceModeling == 'BiLSTM':
@@ -67,26 +73,32 @@ class Model(nn.Module):
         else:
             raise Exception('Prediction is neither CTC or Attn')
 
-    def forward(self, input, text, is_train=True):
+    def forward(self, input, text=None, is_train=True):
         """ Transformation stage """
         if not self.stages['Trans'] == "None":
             input = self.Transformation(input)
 
         """ Feature extraction stage """
         visual_feature = self.FeatureExtraction(input)
-        visual_feature = self.AdaptiveAvgPool(visual_feature.permute(0, 3, 1, 2))  # [b, c, h, w] -> [b, w, c, h]
+        visual_feature = visual_feature.permute(0, 3, 1, 2)
+        # [b, c, h, w] -> [b, w, c, h]
         visual_feature = visual_feature.squeeze(3)
 
-        """ Sequence modeling stage """
+        # """ Sequence modeling stage """
         if self.stages['Seq'] == 'BiLSTM':
             contextual_feature = self.SequenceModeling(visual_feature)
         else:
             contextual_feature = visual_feature  # for convenience. this is NOT contextually modeled by BiLSTM
 
+        b, w, c = contextual_feature.size()
         """ Prediction stage """
         if self.stages['Pred'] == 'CTC':
-            prediction = self.Prediction(contextual_feature.contiguous())
+            contextual_feature = contextual_feature.view(b*w, c)
+            print(contextual_feature.size())
+            prediction = self.Prediction(contextual_feature)
+            prediction = prediction.view(b,w,-1) 
         else:
+            # Note that this OpenCV DNN version dose not support Transformer.
             prediction = self.Prediction(contextual_feature.contiguous(), text, is_train, batch_max_length=self.opt.batch_max_length)
 
         return prediction

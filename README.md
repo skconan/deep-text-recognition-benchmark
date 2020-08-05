@@ -2,7 +2,9 @@
 
 In the [original repository](https://github.com/clovaai/deep-text-recognition-benchmark), the model definition method is incompatible, which makes OpenCV DNN module unable to directly load the converted ONNX model correctly. Here I have made some adjustments to the model structure and provided the script for conversion to ONNX.
 
+After completing the model training, use ```transform_to_onnx.py``` to convert the model into onnx format.
 
+You can use OpenCV C++ samples ```text_recog.cpp``` or ```text_recog.py``` to check if the model run in the right way. More usable examples can be found https://github.com/opencv/opencv/blob/master/samples/dnn/text_detection.cpp.
 
 
 ### Below is the original document

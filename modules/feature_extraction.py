@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torchvision.models.densenet import _DenseBlock
 
 class VGG_FeatureExtractor(nn.Module):
     """ FeatureExtractor of CRNN (https://arxiv.org/pdf/1507.05717.pdf) """
@@ -243,4 +243,41 @@ class ResNet(nn.Module):
         x = self.bn4_2(x)
         x = self.relu(x)
 
+        return x
+
+
+def _make_transition(in_channels, out_channels, pool_stride, pool_pad, dropout):
+    out = nn.Sequential(
+        nn.BatchNorm2d(in_channels),
+        nn.ReLU(),
+        nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+    )
+    if dropout:
+        out.add_module('dropout', nn.Dropout(dropout))
+    out.add_module('pool', nn.AvgPool2d(kernel_size=2, stride=pool_stride, padding=pool_pad))
+    return out
+
+
+class DenseNet(nn.Module):
+    def __init__(self, in_channels, output_channel=512, **kwargs):
+        super(DenseNet, self).__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(in_channels, 64, 5, padding=2, stride=2, bias=False),
+            _DenseBlock(8, 64, 4, 8, 0),
+            _make_transition(128, 128, 2, 0, 0.2),
+
+            _DenseBlock(8, 128, 4, 8, 0),
+            _make_transition(192, 128, (2, 1), 0, 0.2),
+
+            _DenseBlock(8, 128, 4, 8, 0),
+
+            nn.BatchNorm2d(192),
+            nn.ReLU()
+        )
+        self.out_channels = 768
+
+    def forward(self, x):
+        x = self.features(x)
+        B, C, H, W = x.shape
+        x = x.reshape((B, C * H, 1, W))
         return x
